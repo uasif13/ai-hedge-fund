@@ -124,7 +124,7 @@ def cathie_wood_agent(state: AgentState):
 
 def rate(first: int, second: int):
     '''
-    pre: bool(first) != False and bool(second) != False
+    pre: first != None and second != None
     post: True
     '''
     return (second-first)/abs(first)
