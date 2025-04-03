@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from graph.state import AgentState, show_agent_reasoning
-from tools.api import get_financial_metrics, get_market_cap, search_line_items
+# from tools.api import get_financial_metrics, get_market_cap, search_line_items
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
@@ -122,6 +122,12 @@ def cathie_wood_agent(state: AgentState):
         "data": state["data"]
     }
 
+def rate(first: int, second: int):
+    '''
+    pre: bool(first) != False and bool(second) != False
+    post: True
+    '''
+    return (second-first)/abs(first)
 
 def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> dict:
     """
@@ -143,12 +149,13 @@ def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> d
         }
 
     # 1. Revenue Growth Analysis - Check for accelerating growth
+    
     revenues = [item.revenue for item in financial_line_items if item.revenue is not None]
     if len(revenues) >= 3:  # Need at least 3 periods to check acceleration
         growth_rates = []
         for i in range(len(revenues)-1):
             if revenues[i] and revenues[i+1]:
-                growth_rate = (revenues[i+1] - revenues[i]) / abs(revenues[i])
+                growth_rate = growth_rate(revenues[i], revenues[i+1])
                 growth_rates.append(growth_rate)
         
         # Check if growth is accelerating
@@ -255,7 +262,7 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
     
     if rd_expenses and revenues and len(rd_expenses) >= 2:
         # Check R&D growth rate
-        rd_growth = (rd_expenses[-1] - rd_expenses[0]) / abs(rd_expenses[0])
+        rd_growth = rate(rd_expenses[0],rd_expenses[-1])
         if rd_growth > 0.5:  # 50% growth in R&D
             score += 3
             details.append(f"Strong R&D investment growth: +{(rd_growth*100):.1f}%")
@@ -276,7 +283,7 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
     fcf_vals = [item.free_cash_flow for item in financial_line_items if item.free_cash_flow is not None]
     if fcf_vals and len(fcf_vals) >= 2:
         # Check FCF growth and consistency
-        fcf_growth = (fcf_vals[-1] - fcf_vals[0]) / abs(fcf_vals[0]) if fcf_vals[0] != 0 else 0
+        fcf_growth = rate(fcf_vals[-1],fcf_vals[0])
         positive_fcf_count = sum(1 for f in fcf_vals if f > 0)
         
         if fcf_growth > 0.3 and positive_fcf_count == len(fcf_vals):
