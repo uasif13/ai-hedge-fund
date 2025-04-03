@@ -155,7 +155,7 @@ def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> d
         growth_rates = []
         for i in range(len(revenues)-1):
             if revenues[i] and revenues[i+1]:
-                growth_rate = growth_rate(revenues[i], revenues[i+1])
+                growth_rate = rate(revenues[i], revenues[i+1])
                 growth_rates.append(growth_rate)
         
         # Check if growth is accelerating
